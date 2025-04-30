@@ -35,9 +35,27 @@ function validateQuiz(quiz) {
 }
 
 function saveQuiz(quiz) {
-    const quizzes = safeGetItem('quizzes', []);
-    quizzes.push(quiz);
-    return safeSetItem('quizzes', quizzes);
+    try {
+        // Get existing quizzes
+        const quizzes = safeGetItem('quizzes', []);
+        
+        // Add unique ID and creation timestamp if not present
+        if (!quiz.id) {
+            quiz.id = Date.now();
+        }
+        if (!quiz.createdAt) {
+            quiz.createdAt = new Date().toISOString();
+        }
+        
+        // Add to quizzes array
+        quizzes.push(quiz);
+        
+        // Save back to localStorage
+        return safeSetItem('quizzes', quizzes);
+    } catch (error) {
+        console.error('Error saving quiz:', error);
+        return false;
+    }
 }
 
 function updateQuiz(quizId, updatedQuiz) {
@@ -114,6 +132,35 @@ function getProgress(userEmail, quizId) {
     return progress[userEmail]?.[quizId] || [];
 }
 
+// Student results utility functions
+function saveStudentResult(email, quizId, score) {
+    try {
+        const results = safeGetItem('studentResults', {});
+        
+        // Initialize user's results if not exists
+        if (!results[email]) {
+            results[email] = [];
+        }
+        
+        // Add new result
+        results[email].push({
+            quizId,
+            score,
+            date: new Date().toISOString()
+        });
+        
+        return safeSetItem('studentResults', results);
+    } catch (error) {
+        console.error('Error saving student result:', error);
+        return false;
+    }
+}
+
+function getStudentResults(email) {
+    const results = safeGetItem('studentResults', {});
+    return results[email] || [];
+}
+
 // Export all utility functions
 window.utils = {
     safeGetItem,
@@ -127,5 +174,7 @@ window.utils = {
     updateUser,
     deleteUser,
     saveProgress,
-    getProgress
+    getProgress,
+    saveStudentResult,
+    getStudentResults
 }; 
