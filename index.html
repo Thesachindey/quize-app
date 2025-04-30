@@ -1,102 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <title>Quiz App</title>
-  <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz App - Welcome</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
 </head>
-<body>
-  <div class="start-btn">
-    <div class="welcome-content">
-      <h1>Welcome to the Quiz App!</h1>
-      <p>Test your  knowledge with fun and interactive questions. Click the button below to get started!</p>
-  
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold text-blue-600">QuizApp</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="login.html" class="px-4 py-2 text-blue-600 hover:text-blue-700">Login</a>
+                    <a href="login.html" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Get Started</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div class="text-center">
+            <h1 class="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+                Welcome to QuizApp
+            </h1>
+            <p class="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+                A modern platform for creating, managing, and taking quizzes. Perfect for educators and students.
+            </p>
+            <div class="flex justify-center space-x-4">
+                <a href="login.html" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    Start Learning
+                </a>
+                <a href="#features" class="px-6 py-3 bg-white text-blue-600 rounded-lg hover:bg-gray-50 transition-colors">
+                    Learn More
+                </a>
+            </div>
+        </div>
     </div>
-    <button>Start Quiz</button>
-    
-  </div>
-  <div class="instruction">
-    <header>
-      <p>Some Rules of this quiz</p>
-    </header>
-    <div class="rules">
-      <p>1.You will have only <span>15 seconds </span>to answer each questions</p>
-      <p>2.Once you selected any option then it would consider your final answer</p>
-      <p>3.Once you selected any option it can't be undone</p>
-      <p>4.For each correct answer you will be rewarded with points</p>
-      <p>5.The total score will be revealed at the end</p>
+
+    <!-- Features Section -->
+    <div id="features" class="bg-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-center text-gray-900 mb-12">Key Features</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Student Feature -->
+                <div class="bg-gray-50 rounded-xl p-6">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">For Students</h3>
+                    <p class="text-gray-600">Take quizzes, track your progress, and improve your knowledge.</p>
+                </div>
+
+                <!-- Teacher Feature -->
+                <div class="bg-gray-50 rounded-xl p-6">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">For Teachers</h3>
+                    <p class="text-gray-600">Create and manage quizzes, track student performance.</p>
+                </div>
+
+                <!-- Admin Feature -->
+                <div class="bg-gray-50 rounded-xl p-6">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">For Admins</h3>
+                    <p class="text-gray-600">Manage users, monitor system performance, and maintain security.</p>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="instruction-btn">
-      <button>Exit Quiz</button>
-      <button>Start Quiz</button>
-    </div>
-  </div>
-  
-  <div class="wrapper">
-    <header>
-      <h4>Excellent Quiz App</h4>
-      <div class="Timer">
-        <p>Time Left</p>
-        <p>15</p>
-      </div>
-    </header>
-    <div class="timer-progress">
-      <div class="inner"></div>
-    </div>
-    <div class="question-container">
-      What does HTML stand for ?
-    </div>
-    <div class="option-container">
-    </div>
-    <div class="status">
-      <p class="question-num">
-        <span class="current-question">1</span>
-        <span>of</span>
-        <span class="total-question">8 </span>
-        <span>Questions</span>
-      </p>
-      <div class="btn">
-        <button>Next</button>
-      </div>
-    </div>
-  </div>
-  <div class="result-card">
-    <header>
-      <p>Result</p>
-    </header>
-    <div class="image">
-      <div class="user-score">
-        <p class="value">30</p>
-        <p>Your Score</p>
-      </div>
-    </div>
-    <div class="score">
-      <div class="total-score">
-        <p class="value">50</p>
-        <p>Total Score</p>
-      </div>
-      <div class="attempted">
-        <p class="value">27</p>
-        <p>Attempted</p>
-      </div>
-      <div class="unattempted">
-        <p class="value">23</p>
-        <p>Unattempted</p>
-      </div>
-      <div class="wrong">
-        <p class="value">10</p>
-        <p>Wrong</p>
-      </div>
-    </div>
-    <div class="score-btn">
-      <button>Replay Quiz</button>
-      <button>Exit Quiz</button>
-    </div>
-  </div>
-  <script src="main.js"></script>
+
+    <!-- Footer -->
+    <footer class="bg-gray-50 border-t">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="text-center text-gray-600">
+                <p>&copy; 2024 QuizApp. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Check if user is already logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (currentUser) {
+                window.location.href = 'dashboard.html';
+            }
+        });
+    </script>
 </body>
 </html>
