@@ -142,7 +142,11 @@
         function showCreateQuizModal() {
             if (!checkTeacherAccess()) return;
             document.getElementById('createQuizModal').classList.remove('hidden');
-            addQuestion();
+            document.getElementById('createQuizForm').reset();
+            document.getElementById('questionsContainer').innerHTML = '';
+            document.getElementById('successMessage').classList.add('hidden');
+            questionCount = 0;
+            addQuestion(); // Add first question by default
         }
 
         // Hide create quiz modal
