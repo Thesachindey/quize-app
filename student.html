@@ -124,11 +124,13 @@
         let score = 0;
         let timer = null;
         let timeLeft = 0;
+        let userAnswers = [];
 
         // Display available quizzes
         function displayQuizzes() {
             const quizList = document.getElementById('quizList');
             const quizzes = utils.safeGetItem('quizzes', []);
+            const userEmail = utils.safeGetItem('currentUser', {}).email;
             
             if (quizzes.length === 0) {
                 quizList.innerHTML = `
@@ -140,10 +142,12 @@
             }
 
             quizList.innerHTML = quizzes.map(quiz => {
-                const userEmail = utils.safeGetItem('currentUser', {}).email;
                 const quizProgress = utils.getProgress(userEmail, quiz.id);
                 const bestScore = quizProgress.length > 0 
                     ? Math.max(...quizProgress.map(attempt => attempt.score))
+                    : null;
+                const lastAttempt = quizProgress.length > 0 
+                    ? quizProgress[quizProgress.length - 1]
                     : null;
 
                 return `
@@ -154,6 +158,9 @@
                             <p>Time Limit: ${quiz.timeLimit} minutes</p>
                             ${bestScore !== null ? `
                                 <p class="text-green-600">Best Score: ${bestScore}/${quiz.questions.length}</p>
+                            ` : ''}
+                            ${lastAttempt ? `
+                                <p class="text-blue-600">Last Attempt: ${new Date(lastAttempt.date).toLocaleDateString()}</p>
                             ` : ''}
                         </div>
                         <button 
@@ -167,8 +174,50 @@
             }).join('');
         }
 
-        // Start quiz
+        // Initialize student page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is logged in
+            const user = utils.safeGetItem('currentUser');
+            if (!user) {
+                alert('Please login to access this page');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Check if user has student role
+            if (user.role !== 'student') {
+                alert('Access denied. This page is for students only.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Set user info and welcome message
+            displayUserInfo(user);
+            const users = utils.safeGetItem('users', []);
+            const currentUser = users.find(u => u.email === user.email);
+            if (currentUser) {
+                document.getElementById('welcomeMessage').textContent = `Welcome, ${currentUser.name}`;
+            }
+
+            // Initialize page content
+            displayQuizzes();
+        });
+
+        // Add role check to all quiz participation functions
+        function checkStudentAccess() {
+            const user = utils.safeGetItem('currentUser');
+            if (!user || user.role !== 'student') {
+                alert('Access denied. This page is for students only.');
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Update quiz participation functions to include role check
         function startQuiz(quizId) {
+            if (!checkStudentAccess()) return;
+            
             const quizzes = utils.safeGetItem('quizzes', []);
             currentQuiz = quizzes.find(q => q.id === quizId);
             
@@ -179,6 +228,7 @@
 
             currentQuestionIndex = 0;
             score = 0;
+            userAnswers = [];
             timeLeft = currentQuiz.timeLimit * 60;
 
             document.getElementById('quizTitle').textContent = currentQuiz.title;
@@ -197,12 +247,16 @@
             
             const optionsContainer = document.getElementById('optionsContainer');
             optionsContainer.innerHTML = Object.entries(question.options).map(([key, value]) => `
-                <button 
-                    onclick="selectAnswer('${key}')"
-                    class="w-full text-left px-4 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                >
-                    ${key}. ${value}
-                </button>
+                <label class="flex items-center space-x-3 p-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <input 
+                        type="radio" 
+                        name="answer" 
+                        value="${key}"
+                        class="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                        ${userAnswers[currentQuestionIndex] === key ? 'checked' : ''}
+                    >
+                    <span class="text-gray-900">${key}. ${value}</span>
+                </label>
             `).join('');
 
             // Update progress bar
@@ -212,38 +266,26 @@
 
         // Handle answer selection
         function selectAnswer(selectedOption) {
+            if (!checkStudentAccess()) return;
             if (!currentQuiz || currentQuestionIndex >= currentQuiz.questions.length) return;
             
             const question = currentQuiz.questions[currentQuestionIndex];
+            userAnswers[currentQuestionIndex] = selectedOption;
             
-            // Disable all options
-            const options = document.querySelectorAll('#optionsContainer button');
-            options.forEach(option => {
-                option.disabled = true;
-                option.classList.remove('hover:bg-gray-50');
-            });
-
-            // Highlight correct and incorrect answers
-            const selectedButton = Array.from(options).find(btn => btn.textContent.trim().startsWith(selectedOption));
-            const correctButton = Array.from(options).find(btn => btn.textContent.trim().startsWith(question.correctAnswer));
-
             if (selectedOption === question.correctAnswer) {
-                selectedButton.classList.add('bg-green-100', 'border-green-500');
                 score++;
-            } else {
-                selectedButton.classList.add('bg-red-100', 'border-red-500');
-                correctButton.classList.add('bg-green-100', 'border-green-500');
             }
+        }
 
-            // Move to next question after a short delay
-            setTimeout(() => {
+        // Move to next question
+        function nextQuestion() {
+            if (!checkStudentAccess()) return;
+            if (currentQuestionIndex < currentQuiz.questions.length - 1) {
                 currentQuestionIndex++;
-                if (currentQuestionIndex < currentQuiz.questions.length) {
-                    displayQuestion();
-                } else {
-                    endQuiz();
-                }
-            }, 1000);
+                displayQuestion();
+            } else {
+                endQuiz();
+            }
         }
 
         // Start timer
@@ -272,10 +314,10 @@
 
         // End quiz
         function endQuiz() {
+            if (!checkStudentAccess()) return;
             clearInterval(timer);
             document.getElementById('quizModal').classList.add('hidden');
 
-            // Save progress
             const userEmail = utils.safeGetItem('currentUser', {}).email;
             if (!userEmail) {
                 alert('Error: User session not found!');
@@ -287,7 +329,6 @@
                 return;
             }
 
-            // Show results
             showResults();
         }
 
@@ -332,31 +373,6 @@
             document.getElementById('resultsModal').classList.add('hidden');
             displayQuizzes(); // Refresh quiz list to show updated scores
         }
-
-        // Initialize student page
-        document.addEventListener('DOMContentLoaded', function() {
-            const user = utils.safeGetItem('currentUser');
-            if (!user) {
-                alert('Please login to access this page');
-                window.location.href = 'login.html';
-                return;
-            }
-
-            if (user.role !== 'student') {
-                alert('Access denied. This page is for students only.');
-                window.location.href = 'login.html';
-                return;
-            }
-
-            displayUserInfo(user);
-            // Set welcome message
-            const users = utils.safeGetItem('users', []);
-            const currentUser = users.find(u => u.email === user.email);
-            if (currentUser) {
-                document.getElementById('welcomeMessage').textContent = `Welcome, ${currentUser.name}`;
-            }
-            displayQuizzes();
-        });
     </script>
 </body>
 </html> 
