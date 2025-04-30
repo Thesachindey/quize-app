@@ -24,128 +24,69 @@
                         <p class="text-sm text-gray-600" id="userRole"></p>
                     </div>
                 </div>
-                <button 
-                    onclick="logout()" 
-                    class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
-                >
-                    Logout
-                </button>
+                <div class="flex gap-4">
+                    <button 
+                        onclick="logout()" 
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+                    >
+                        Logout
+                    </button>
+                </div>
             </div>
         </div>
 
         <!-- Content Section -->
-        <div id="content" class="bg-white rounded-2xl shadow-sm p-6">
-            <!-- Content will be dynamically inserted here -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Admin Section -->
+            <div id="adminSection" class="hidden bg-white rounded-2xl shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Admin Controls</h3>
+                <div class="space-y-4">
+                    <a href="admin.html" class="block w-full px-4 py-2 bg-blue-600 text-white text-center rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                        User Management
+                    </a>
+                </div>
+            </div>
+
+            <!-- Teacher Section -->
+            <div id="teacherSection" class="hidden bg-white rounded-2xl shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Teacher Controls</h3>
+                <div class="space-y-4">
+                    <a href="teacher.html" class="block w-full px-4 py-2 bg-blue-600 text-white text-center rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                        Manage Quizzes
+                    </a>
+                </div>
+            </div>
+
+            <!-- Student Section -->
+            <div id="studentSection" class="hidden bg-white rounded-2xl shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Student Controls</h3>
+                <div class="space-y-4">
+                    <a href="student.html" class="block w-full px-4 py-2 bg-blue-600 text-white text-center rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                        Take Quiz
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
+    <script src="auth.js"></script>
     <script>
-        // Check if user is logged in
-        function checkAuth() {
-            try {
-                const user = JSON.parse(localStorage.getItem('currentUser'));
-                
-                if (!user || !user.email || !user.role) {
-                    console.warn('Invalid user data found in localStorage');
-                    localStorage.removeItem('currentUser');
-                    window.location.href = 'login.html';
-                    return null;
-                }
-
-                const validRoles = ['student', 'teacher', 'admin'];
-                if (!validRoles.includes(user.role)) {
-                    console.warn('Invalid role found in user data');
-                    localStorage.removeItem('currentUser');
-                    window.location.href = 'login.html';
-                    return null;
-                }
-
-                return user;
-            } catch (error) {
-                console.error('Error checking authentication:', error);
-                localStorage.removeItem('currentUser');
-                window.location.href = 'login.html';
-                return null;
-            }
-        }
-
-        // Display user information
-        function displayUserInfo(user) {
-            document.getElementById('userEmail').textContent = user.email;
-            document.getElementById('userRole').textContent = `Role: ${user.role.charAt(0).toUpperCase() + user.role.slice(1)}`;
-            document.getElementById('userAvatar').textContent = user.email.charAt(0).toUpperCase();
-        }
-
-        // Display role-specific content
-        function displayContent(user) {
-            const contentDiv = document.getElementById('content');
-            let content = '';
-
-            switch(user.role) {
-                case 'student':
-                    content = `
-                        <div class="text-center">
-                            <h2 class="text-2xl font-bold text-gray-900 mb-4">Student Dashboard</h2>
-                            <p class="text-gray-600 mb-8">Welcome to your student dashboard. You can start taking quizzes here.</p>
-                            <a href="student.html" class="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
-                                Start Quiz
-                            </a>
-                        </div>
-                    `;
-                    break;
-                case 'teacher':
-                    content = `
-                        <div class="text-center">
-                            <h2 class="text-2xl font-bold text-gray-900 mb-4">Teacher Dashboard</h2>
-                            <p class="text-gray-600 mb-8">Welcome to your teacher dashboard. You can create and manage quizzes here.</p>
-                            <a href="teacher.html" class="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
-                                Create Quiz
-                            </a>
-                        </div>
-                    `;
-                    break;
-                case 'admin':
-                    content = `
-                        <div class="text-center">
-                            <h2 class="text-2xl font-bold text-gray-900 mb-4">Admin Dashboard</h2>
-                            <p class="text-gray-600 mb-8">Welcome to your admin dashboard. You can manage users and system settings here.</p>
-                            <a href="admin.html" class="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
-                                Manage Users
-                            </a>
-                        </div>
-                    `;
-                    break;
-                default:
-                    content = `
-                        <div class="text-center">
-                            <h2 class="text-2xl font-bold text-red-600 mb-4">Invalid Role</h2>
-                            <p class="text-gray-600">Please contact support if you believe this is an error.</p>
-                        </div>
-                    `;
-            }
-
-            contentDiv.innerHTML = content;
-        }
-
-        // Logout function
-        function logout() {
-            if (confirm('Are you sure you want to logout?')) {
-                try {
-                    localStorage.removeItem('currentUser');
-                    window.location.href = 'login.html';
-                } catch (error) {
-                    console.error('Logout error:', error);
-                    alert('An error occurred during logout. Please try again.');
-                }
-            }
-        }
-
-        // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
             const user = checkAuth();
             if (user) {
                 displayUserInfo(user);
-                displayContent(user);
+                
+                // Show role-specific sections
+                const role = user.role;
+                if (role === 'admin') {
+                    document.getElementById('adminSection').classList.remove('hidden');
+                }
+                if (role === 'teacher') {
+                    document.getElementById('teacherSection').classList.remove('hidden');
+                }
+                if (role === 'student') {
+                    document.getElementById('studentSection').classList.remove('hidden');
+                }
             }
         });
     </script>
