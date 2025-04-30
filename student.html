@@ -128,7 +128,7 @@
         // Display available quizzes
         function displayQuizzes() {
             const quizList = document.getElementById('quizList');
-            const quizzes = safeGetItem('quizzes', []);
+            const quizzes = utils.safeGetItem('quizzes', []);
             
             if (quizzes.length === 0) {
                 quizList.innerHTML = `
@@ -140,9 +140,8 @@
             }
 
             quizList.innerHTML = quizzes.map(quiz => {
-                const userEmail = safeGetItem('currentUser', {}).email;
-                const progress = safeGetItem('studentProgress', {});
-                const quizProgress = progress[userEmail]?.[quiz.id] || [];
+                const userEmail = utils.safeGetItem('currentUser', {}).email;
+                const quizProgress = utils.getProgress(userEmail, quiz.id);
                 const bestScore = quizProgress.length > 0 
                     ? Math.max(...quizProgress.map(attempt => attempt.score))
                     : null;
@@ -170,7 +169,7 @@
 
         // Start quiz
         function startQuiz(quizId) {
-            const quizzes = safeGetItem('quizzes', []);
+            const quizzes = utils.safeGetItem('quizzes', []);
             currentQuiz = quizzes.find(q => q.id === quizId);
             
             if (!currentQuiz) {
@@ -277,28 +276,13 @@
             document.getElementById('quizModal').classList.add('hidden');
 
             // Save progress
-            const userEmail = safeGetItem('currentUser', {}).email;
+            const userEmail = utils.safeGetItem('currentUser', {}).email;
             if (!userEmail) {
                 alert('Error: User session not found!');
                 return;
             }
 
-            const progress = safeGetItem('studentProgress', {});
-            
-            if (!progress[userEmail]) {
-                progress[userEmail] = {};
-            }
-            if (!progress[userEmail][currentQuiz.id]) {
-                progress[userEmail][currentQuiz.id] = [];
-            }
-
-            progress[userEmail][currentQuiz.id].push({
-                score,
-                totalQuestions: currentQuiz.questions.length,
-                date: new Date().toISOString()
-            });
-
-            if (!safeSetItem('studentProgress', progress)) {
+            if (!utils.saveProgress(userEmail, currentQuiz.id, score, currentQuiz.questions.length)) {
                 alert('Error saving quiz progress!');
                 return;
             }
@@ -309,9 +293,8 @@
 
         // Show results
         function showResults() {
-            const userEmail = safeGetItem('currentUser', {}).email;
-            const progress = safeGetItem('studentProgress', {});
-            const quizProgress = progress[userEmail]?.[currentQuiz.id] || [];
+            const userEmail = utils.safeGetItem('currentUser', {}).email;
+            const quizProgress = utils.getProgress(userEmail, currentQuiz.id);
 
             document.getElementById('scoreDisplay').textContent = `${score}/${currentQuiz.questions.length}`;
             
@@ -352,7 +335,7 @@
 
         // Initialize student page
         document.addEventListener('DOMContentLoaded', function() {
-            const user = safeGetItem('currentUser');
+            const user = utils.safeGetItem('currentUser');
             if (!user) {
                 alert('Please login to access this page');
                 window.location.href = 'login.html';
@@ -367,7 +350,7 @@
 
             displayUserInfo(user);
             // Set welcome message
-            const users = safeGetItem('users', []);
+            const users = utils.safeGetItem('users', []);
             const currentUser = users.find(u => u.email === user.email);
             if (currentUser) {
                 document.getElementById('welcomeMessage').textContent = `Welcome, ${currentUser.name}`;
