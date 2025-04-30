@@ -141,7 +141,8 @@
         // Show create quiz modal
         function showCreateQuizModal() {
             if (!checkTeacherAccess()) return;
-            document.getElementById('createQuizModal').classList.remove('hidden');
+            const modal = document.getElementById('createQuizModal');
+            modal.classList.remove('hidden');
             document.getElementById('createQuizForm').reset();
             document.getElementById('questionsContainer').innerHTML = '';
             document.getElementById('successMessage').classList.add('hidden');
@@ -151,7 +152,8 @@
 
         // Hide create quiz modal
         function hideCreateQuizModal() {
-            document.getElementById('createQuizModal').classList.add('hidden');
+            const modal = document.getElementById('createQuizModal');
+            modal.classList.add('hidden');
             document.getElementById('createQuizForm').reset();
             document.getElementById('questionsContainer').innerHTML = '';
             document.getElementById('successMessage').classList.add('hidden');
