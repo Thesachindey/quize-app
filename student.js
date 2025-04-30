@@ -104,8 +104,8 @@ function startQuiz(quizId) {
         return;
     }
     
-    // Navigate to dashboard
-    window.location.href = 'dashboard.html';
+    // Navigate to quiz page
+    window.location.href = 'quiz.html';
 }
 
 // Display current question
