@@ -65,7 +65,32 @@ function logout() {
     }
 }
 
+// Utility functions for safe localStorage operations
+function safeGetItem(key, defaultValue = []) {
+    try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : defaultValue;
+    } catch (error) {
+        console.error(`Error reading ${key} from localStorage:`, error);
+        return defaultValue;
+    }
+}
+
+function safeSetItem(key, value) {
+    try {
+        localStorage.setItem(key, JSON.stringify(value));
+        return true;
+    } catch (error) {
+        console.error(`Error writing ${key} to localStorage:`, error);
+        return false;
+    }
+}
+
 // Export functions
 window.checkAuth = checkAuth;
 window.displayUserInfo = displayUserInfo;
-window.logout = logout; 
+window.logout = logout;
+
+// Export utility functions
+window.safeGetItem = safeGetItem;
+window.safeSetItem = safeSetItem; 
