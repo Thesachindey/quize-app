@@ -1,5 +1,5 @@
 // Check authentication on page load
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     checkAuth("teacher");
 });
 
@@ -131,17 +131,25 @@ function updateQuestionNumbers() {
     questionCount = questions.length;
 }
 
+// Save quiz to localStorage
+function saveQuiz(quiz) {
+    const quizzes = JSON.parse(localStorage.getItem('quizzes')) || [];
+    quizzes.push(quiz);
+    localStorage.setItem('quizzes', JSON.stringify(quizzes));
+    return true;
+}
+
 // Display teacher's quizzes
 function displayQuizzes() {
     if (!checkTeacherAccess()) return;
-    
+
     const quizList = document.getElementById('quizList');
-    const quizzes = utils.safeGetItem('quizzes', []);
-    const currentUserEmail = utils.safeGetItem('currentUser', {}).email;
-    
+    const quizzes = JSON.parse(localStorage.getItem('quizzes')) || [];
+    const currentUserEmail = JSON.parse(localStorage.getItem('currentUser')).email;
+
     // Filter quizzes created by this teacher
     const teacherQuizzes = quizzes.filter(quiz => quiz.createdBy === currentUserEmail);
-    
+
     if (teacherQuizzes.length === 0) {
         quizList.innerHTML = `
             <div class="col-span-full text-center py-8">
@@ -158,14 +166,6 @@ function displayQuizzes() {
                 <p>Questions: ${quiz.questions.length}</p>
                 <p>Time Limit: ${quiz.timeLimit} minutes</p>
                 <p>Created: ${new Date(quiz.createdAt).toLocaleDateString()}</p>
-            </div>
-            <div class="space-y-4">
-                ${quiz.questions.map((q, index) => `
-                    <div class="border-t pt-2">
-                        <p class="font-medium">Q${index + 1}: ${q.text}</p>
-                        <p class="text-green-600">Correct Answer: ${q.correctAnswer}</p>
-                    </div>
-                `).join('')}
             </div>
             <div class="mt-4 flex gap-2">
                 <button 
@@ -188,10 +188,10 @@ function displayQuizzes() {
 // Edit quiz function
 function editQuiz(quizId) {
     if (!checkTeacherAccess()) return;
-    
-    const quizzes = utils.safeGetItem('quizzes', []);
+
+    const quizzes = JSON.parse(localStorage.getItem('quizzes')) || [];
     const quiz = quizzes.find(q => q.id === quizId);
-    
+
     if (!quiz) {
         alert('Quiz not found!');
         return;
@@ -200,16 +200,16 @@ function editQuiz(quizId) {
     // Populate form with quiz data
     document.getElementById('quizTitle').value = quiz.title;
     document.getElementById('timeLimit').value = quiz.timeLimit;
-    
+
     // Clear existing questions
     const questionsContainer = document.getElementById('questionsContainer');
     questionsContainer.innerHTML = '';
-    
+
     // Add questions
     quiz.questions.forEach((q, index) => {
         addQuestion();
         const questionBlock = questionsContainer.lastElementChild;
-        
+
         questionBlock.querySelector('[name="question"]').value = q.text;
         questionBlock.querySelector('[name="optionA"]').value = q.options.A;
         questionBlock.querySelector('[name="optionB"]').value = q.options.B;
@@ -225,24 +225,24 @@ function editQuiz(quizId) {
 // Delete quiz function
 function deleteQuiz(quizId) {
     if (!checkTeacherAccess()) return;
-    
+
     if (!confirm('Are you sure you want to delete this quiz?')) {
         return;
     }
 
-    if (utils.deleteQuiz(quizId)) {
-        displayQuizzes(); // Refresh the list
-    } else {
-        alert('Error deleting quiz!');
-    }
+    const quizzes = JSON.parse(localStorage.getItem('quizzes')) || [];
+    const updatedQuizzes = quizzes.filter(quiz => quiz.id !== quizId);
+    localStorage.setItem('quizzes', JSON.stringify(updatedQuizzes));
+
+    displayQuizzes(); // Refresh the list
 }
 
 // Check teacher access
 function checkTeacherAccess() {
-    const user = utils.safeGetItem('currentUser');
+    const user = JSON.parse(localStorage.getItem('currentUser'));
     if (!user || user.role !== 'teacher') {
         alert('Access denied. This page is for teachers only.');
-        window.location.href = 'login.html';
+        window.location.href = 'dashboard.html';
         return false;
     }
     return true;
@@ -313,11 +313,11 @@ function createQuiz() {
         timeLimit: parseInt(timeInput.value),
         questions: questions,
         createdAt: new Date().toISOString(),
-        createdBy: utils.safeGetItem('currentUser', {}).email
+        createdBy: JSON.parse(localStorage.getItem('currentUser')).email
     };
 
-    // Save quiz using utils function
-    if (utils.saveQuiz(quiz)) {
+    // Save quiz
+    if (saveQuiz(quiz)) {
         // Show success message
         const successMessage = document.getElementById('successMessage');
         successMessage.textContent = 'Quiz created successfully!';
@@ -336,9 +336,12 @@ function createQuiz() {
 }
 
 // Add event listener for save button
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const saveButton = document.getElementById('saveQuizBtn');
     if (saveButton) {
         saveButton.addEventListener('click', createQuiz);
     }
-}); 
+
+    // Display quizzes on page load
+    displayQuizzes();
+});

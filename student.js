@@ -7,40 +7,57 @@ let userAnswers = [];
 
 // Display available quizzes
 function displayQuizzes() {
-    const quizList = document.getElementById('quizList');
-    const quizzes = utils.safeGetItem('quizzes', []);
-    const userEmail = utils.safeGetItem('currentUser', {}).email;
-    
-    if (quizzes.length === 0) {
-        quizList.innerHTML = `
-            <div class="col-span-full text-center py-8">
-                <p class="text-gray-600">No quizzes available yet.</p>
-            </div>
-        `;
-        return;
-    }
+    const unfinishedList = document.getElementById('unfinishedQuizList');
+    const finishedList = document.getElementById('finishedQuizList');
+    const quizzes = JSON.parse(localStorage.getItem('quizzes')) || [];
+    const userEmail = JSON.parse(localStorage.getItem('currentUser')).email;
 
-    quizList.innerHTML = quizzes.map(quiz => {
-        const quizProgress = utils.getProgress(userEmail, quiz.id);
-        const bestScore = quizProgress.length > 0 
+    let unfinishedQuizzes = [];
+    let finishedQuizzes = [];
+
+    // Sort quizzes into finished and unfinished
+    quizzes.forEach(quiz => {
+        const quizProgress = getProgress(userEmail, quiz.id);
+        const bestScore = quizProgress.length > 0
             ? Math.max(...quizProgress.map(attempt => attempt.score))
             : null;
-        const lastAttempt = quizProgress.length > 0 
+        const lastAttempt = quizProgress.length > 0
             ? quizProgress[quizProgress.length - 1]
             : null;
+        
+        const quizWithProgress = {
+            ...quiz,
+            bestScore,
+            lastAttempt,
+            progress: quizProgress
+        };
 
-        return `
-            <div class="bg-gray-50 rounded-lg p-6">
+        if (quizProgress.length > 0) {
+            finishedQuizzes.push(quizWithProgress);
+        } else {
+            unfinishedQuizzes.push(quizWithProgress);
+        }
+    });
+
+    // Update counters
+    document.getElementById('completedCount').textContent = finishedQuizzes.length;
+    document.getElementById('availableCount').textContent = unfinishedQuizzes.length;
+
+    // Display unfinished quizzes
+    if (unfinishedQuizzes.length === 0) {
+        unfinishedList.innerHTML = `
+            <div class="col-span-full text-center py-8">
+                <p class="text-gray-600">No unfinished quizzes available.</p>
+            </div>
+        `;
+    } else {
+        unfinishedList.innerHTML = unfinishedQuizzes.map(quiz => `
+            <div class="bg-gray-50 rounded-lg p-6 border-2 border-yellow-400">
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">${quiz.title}</h3>
                 <div class="space-y-2 text-sm text-gray-600 mb-4">
                     <p>Questions: ${quiz.questions.length}</p>
                     <p>Time Limit: ${quiz.timeLimit} minutes</p>
-                    ${bestScore !== null ? `
-                        <p class="text-green-600">Best Score: ${bestScore}/${quiz.questions.length}</p>
-                    ` : ''}
-                    ${lastAttempt ? `
-                        <p class="text-blue-600">Last Attempt: ${new Date(lastAttempt.date).toLocaleDateString()}</p>
-                    ` : ''}
+                    <p class="text-yellow-600">Status: Not attempted yet</p>
                 </div>
                 <button 
                     onclick="startQuiz(${quiz.id})"
@@ -49,165 +66,197 @@ function displayQuizzes() {
                     Start Quiz
                 </button>
             </div>
+        `).join('');
+    }
+
+    // Display finished quizzes
+    if (finishedQuizzes.length === 0) {
+        finishedList.innerHTML = `
+            <div class="col-span-full text-center py-8">
+                <p class="text-gray-600">No completed quizzes yet.</p>
+            </div>
         `;
-    }).join('');
+    } else {
+        finishedList.innerHTML = finishedQuizzes.map(quiz => `
+            <div class="bg-gray-50 rounded-lg p-6 border-2 border-green-400">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">${quiz.title}</h3>
+                <div class="space-y-2 text-sm text-gray-600 mb-4">
+                    <p>Questions: ${quiz.questions.length}</p>
+                    <p>Time Limit: ${quiz.timeLimit} minutes</p>
+                    <p class="text-green-600">Best Score: ${quiz.bestScore}/${quiz.questions.length}</p>
+                    <p class="text-blue-600">Last Attempt: ${new Date(quiz.lastAttempt.date).toLocaleDateString()}</p>
+                </div>
+                <button 
+                    onclick="startQuiz(${quiz.id})"
+                    class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                >
+                    Retake Quiz
+                </button>
+            </div>
+        `).join('');
+    }
 }
 
-// Initialize student page
-document.addEventListener('DOMContentLoaded', function() {
-    // Check if user is logged in
-    const user = utils.safeGetItem('currentUser');
-    if (!user) {
-        alert('Please login to access this page');
-        window.location.href = 'login.html';
-        return;
-    }
-
-    // Check if user has student role
-    if (user.role !== 'student') {
-        alert('Access denied. This page is for students only.');
-        window.location.href = 'login.html';
-        return;
-    }
-
-    // Set user info and welcome message
-    displayUserInfo(user);
-    const users = utils.safeGetItem('users', []);
-    const currentUser = users.find(u => u.email === user.email);
-    if (currentUser) {
-        document.getElementById('welcomeMessage').textContent = `Welcome, ${currentUser.name}`;
-    }
-
-    // Initialize page content
-    displayQuizzes();
-    displayQuizHistory();
-});
-
-// Add role check to all quiz participation functions
-function checkStudentAccess() {
-    const user = utils.safeGetItem('currentUser');
-    if (!user || user.role !== 'student') {
-        alert('Access denied. This page is for students only.');
-        window.location.href = 'login.html';
-        return false;
-    }
-    return true;
-}
-
-// Update quiz participation functions to include role check
+// Start a quiz
 function startQuiz(quizId) {
-    if (!checkStudentAccess()) return;
-    
-    // Save active quiz ID to localStorage
-    if (!utils.safeSetItem('activeQuiz', quizId)) {
-        alert('Error starting quiz. Please try again.');
+    const quizzes = JSON.parse(localStorage.getItem('quizzes')) || [];
+    currentQuiz = quizzes.find(quiz => quiz.id === quizId);
+
+    if (!currentQuiz) {
+        alert('Quiz not found!');
         return;
     }
-    
-    // Navigate to quiz page
-    window.location.href = 'quiz.html';
+
+    currentQuestionIndex = 0;
+    score = 0;
+    userAnswers = new Array(currentQuiz.questions.length).fill(null);
+    timeLeft = currentQuiz.timeLimit * 60;
+
+    document.getElementById('quizModal').classList.remove('hidden');
+    document.getElementById('totalQuestions').textContent = currentQuiz.questions.length;
+    updateNavigationButtons();
+    displayQuestion();
+    startTimer();
 }
 
-// Display current question
+// Start the quiz timer
+function startTimer() {
+    const timerDisplay = document.getElementById('timerDisplay');
+    timer = setInterval(() => {
+        if (timeLeft <= 0) {
+            clearInterval(timer);
+            alert('Time is up!');
+            endQuiz();
+            return;
+        }
+
+        timeLeft--;
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerDisplay.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }, 1000);
+}
+
+// Display the current question
 function displayQuestion() {
     const question = currentQuiz.questions[currentQuestionIndex];
     document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
     document.getElementById('questionText').textContent = question.text;
-    
+
     const optionsContainer = document.getElementById('optionsContainer');
     optionsContainer.innerHTML = Object.entries(question.options).map(([key, value]) => `
-        <label class="flex items-center space-x-3 p-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
+        <label class="flex items-center space-x-3 p-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors duration-200">
             <input 
                 type="radio" 
                 name="answer" 
                 value="${key}"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                class="h-5 w-5 text-blue-600 focus:ring-blue-500"
                 ${userAnswers[currentQuestionIndex] === key ? 'checked' : ''}
             >
-            <span class="text-gray-900">${key}. ${value}</span>
+            <span class="text-gray-900 text-lg">${key}. ${value}</span>
         </label>
     `).join('');
 
+    // Add event listeners to radio buttons
+    const radioButtons = optionsContainer.querySelectorAll('input[type="radio"]');
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            userAnswers[currentQuestionIndex] = e.target.value;
+            updateNavigationButtons();
+        });
+    });
+
     // Update progress bar
-    const progress = ((currentQuestionIndex) / currentQuiz.questions.length) * 100;
+    const progress = ((currentQuestionIndex + 1) / currentQuiz.questions.length) * 100;
     document.getElementById('progressBar').style.width = `${progress}%`;
+    
+    updateNavigationButtons();
 }
 
-// Handle answer selection
-function selectAnswer(selectedOption) {
-    if (!checkStudentAccess()) return;
-    if (!currentQuiz || currentQuestionIndex >= currentQuiz.questions.length) return;
-    
-    const question = currentQuiz.questions[currentQuestionIndex];
-    userAnswers[currentQuestionIndex] = selectedOption;
-    
-    if (selectedOption === question.correctAnswer) {
-        score++;
+// Update navigation buttons
+function updateNavigationButtons() {
+    const prevBtn = document.getElementById('prevQuestionBtn');
+    const nextBtn = document.getElementById('nextQuestionBtn');
+    const finishBtn = document.getElementById('finishQuizBtn');
+
+    // Previous button
+    prevBtn.disabled = currentQuestionIndex === 0;
+
+    // Next/Finish button
+    if (currentQuestionIndex === currentQuiz.questions.length - 1) {
+        nextBtn.classList.add('hidden');
+        finishBtn.classList.remove('hidden');
+        // Enable finish button only if all questions are answered
+        finishBtn.disabled = userAnswers.includes(null);
+    } else {
+        nextBtn.classList.remove('hidden');
+        finishBtn.classList.add('hidden');
     }
 }
 
-// Move to next question
+// Navigate to previous question
+function previousQuestion() {
+    if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        displayQuestion();
+    }
+}
+
+// Navigate to next question
 function nextQuestion() {
-    if (!checkStudentAccess()) return;
     if (currentQuestionIndex < currentQuiz.questions.length - 1) {
         currentQuestionIndex++;
         displayQuestion();
-    } else {
-        endQuiz();
     }
 }
 
-// Start timer
-function startTimer() {
-    clearInterval(timer);
-    updateTimerDisplay();
-
-    timer = setInterval(() => {
-        timeLeft--;
-        updateTimerDisplay();
-
-        if (timeLeft <= 0) {
-            clearInterval(timer);
-            endQuiz();
+// Calculate score
+function calculateScore() {
+    score = 0;
+    for (let i = 0; i < currentQuiz.questions.length; i++) {
+        if (userAnswers[i] === currentQuiz.questions[i].correctAnswer) {
+            score++;
         }
-    }, 1000);
+    }
+    return score;
 }
 
-// Update timer display
-function updateTimerDisplay() {
-    const minutes = Math.floor(timeLeft / 60);
-    const seconds = timeLeft % 60;
-    document.getElementById('timer').textContent = 
-        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+// Save progress
+function saveProgress(userEmail, quizId, score, totalQuestions) {
+    const progress = JSON.parse(localStorage.getItem('progress')) || [];
+    progress.push({
+        userEmail,
+        quizId,
+        score,
+        totalQuestions,
+        date: new Date().toISOString()
+    });
+    localStorage.setItem('progress', JSON.stringify(progress));
+    return true;
 }
 
-// End quiz
+// Get progress for a specific user and quiz
+function getProgress(userEmail, quizId) {
+    const progress = JSON.parse(localStorage.getItem('progress')) || [];
+    return progress.filter(p => p.userEmail === userEmail && p.quizId === quizId);
+}
+
+// End the quiz
 function endQuiz() {
-    if (!checkStudentAccess()) return;
     clearInterval(timer);
+    score = calculateScore();
+    
+    const userEmail = JSON.parse(localStorage.getItem('currentUser')).email;
+    saveProgress(userEmail, currentQuiz.id, score, currentQuiz.questions.length);
+    
     document.getElementById('quizModal').classList.add('hidden');
-
-    const userEmail = utils.safeGetItem('currentUser', {}).email;
-    if (!userEmail) {
-        alert('Error: User session not found!');
-        return;
-    }
-
-    if (!utils.saveProgress(userEmail, currentQuiz.id, score, currentQuiz.questions.length)) {
-        alert('Error saving quiz progress!');
-        return;
-    }
-
     showResults();
 }
 
-// Show results
+// Show quiz results
 function showResults() {
-    const userEmail = utils.safeGetItem('currentUser', {}).email;
-    const quizProgress = utils.getProgress(userEmail, currentQuiz.id);
-
     document.getElementById('scoreDisplay').textContent = `${score}/${currentQuiz.questions.length}`;
-    
+
     const percentage = (score / currentQuiz.questions.length) * 100;
     let message = '';
     if (percentage >= 80) {
@@ -219,21 +268,6 @@ function showResults() {
     }
     document.getElementById('scoreMessage').textContent = message;
 
-    // Show previous attempts
-    const previousScores = document.getElementById('previousScores');
-    if (quizProgress.length > 1) {
-        previousScores.innerHTML = quizProgress
-            .slice(0, -1) // Exclude current attempt
-            .map(attempt => `
-                <div class="flex justify-between items-center py-1">
-                    <span>${new Date(attempt.date).toLocaleDateString()}</span>
-                    <span>${attempt.score}/${attempt.totalQuestions}</span>
-                </div>
-            `).join('');
-    } else {
-        previousScores.innerHTML = '<p>No previous attempts</p>';
-    }
-
     document.getElementById('resultsModal').classList.remove('hidden');
 }
 
@@ -243,86 +277,37 @@ function closeResultsModal() {
     displayQuizzes(); // Refresh quiz list to show updated scores
 }
 
-function displayQuizHistory() {
-    const user = utils.safeGetItem('currentUser', {});
-    if (!user || !user.email) {
-        console.error('No user found in session');
+// Initialize the student page
+document.addEventListener('DOMContentLoaded', function () {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user || user.role !== 'student') {
+        alert('Access denied. This page is for students only.');
+        window.location.href = 'login.html';
         return;
     }
 
-    // Get all quizzes and student results
-    const quizzes = utils.safeGetItem('quizzes', []);
-    const results = utils.getStudentResults(user.email);
+    // Set personalized welcome message
+    const currentHour = new Date().getHours();
+    let greeting = '';
+    if (currentHour < 12) {
+        greeting = 'Good morning';
+    } else if (currentHour < 17) {
+        greeting = 'Good afternoon';
+    } else {
+        greeting = 'Good evening';
+    }
+    
+    document.getElementById('welcomeMessage').textContent = `${greeting}, ${user.name}!`;
+    document.getElementById('welcomeSubtext').textContent = `Ready to challenge yourself? Choose a quiz below to get started!`;
 
-    // Create progress table
-    const progressTable = document.createElement('div');
-    progressTable.className = 'progress-table';
-    progressTable.innerHTML = `
-        <h2>Your Quiz History</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Quiz Title</th>
-                    <th>Score</th>
-                    <th>Date</th>
-                    <th>Attempts</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${results.map(result => {
-                    const quiz = quizzes.find(q => q.id === result.quizId);
-                    if (!quiz) return '';
-                    
-                    const attempts = utils.getProgress(user.email, result.quizId).length;
-                    const date = new Date(result.date).toLocaleDateString();
-                    
-                    return `
-                        <tr>
-                            <td>${quiz.title}</td>
-                            <td>${result.score.toFixed(1)}%</td>
-                            <td>${date}</td>
-                            <td>${attempts}</td>
-                        </tr>
-                    `;
-                }).join('')}
-            </tbody>
-        </table>
-    `;
+    displayQuizzes();
 
-    // Add styles
-    const style = document.createElement('style');
-    style.textContent = `
-        .progress-table {
-            margin: 20px;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    // Add navigation button event listeners
+    document.getElementById('prevQuestionBtn').addEventListener('click', previousQuestion);
+    document.getElementById('nextQuestionBtn').addEventListener('click', nextQuestion);
+    document.getElementById('finishQuizBtn').addEventListener('click', function() {
+        if (confirm('Are you sure you want to finish the quiz? Make sure you have answered all questions.')) {
+            endQuiz();
         }
-        .progress-table h2 {
-            color: #333;
-            margin-bottom: 20px;
-        }
-        .progress-table table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .progress-table th, .progress-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        .progress-table th {
-            background-color: #f5f5f5;
-            font-weight: bold;
-        }
-        .progress-table tr:hover {
-            background-color: #f9f9f9;
-        }
-    `;
-    document.head.appendChild(style);
-
-    // Add table to the page
-    const container = document.querySelector('.container');
-    container.appendChild(progressTable);
-} 
+    });
+});

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,26 +13,27 @@
         }
     </style>
 </head>
+
 <body class="min-h-screen bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Header -->
         <div class="bg-white rounded-2xl shadow-sm p-6 mb-8">
             <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl" id="userAvatar"></div>
+                    <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl"
+                        id="userAvatar"></div>
                     <div>
                         <h2 class="text-xl font-semibold text-gray-900" id="userEmail"></h2>
                         <p class="text-sm text-gray-600" id="userRole"></p>
                     </div>
                 </div>
                 <div class="flex gap-4">
-                    <a href="dashboard.html" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors">
+                    <a href="dashboard.html"
+                        class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors">
                         Back to Dashboard
                     </a>
-                    <button 
-                        onclick="logout()" 
-                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
-                    >
+                    <button onclick="logout()"
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors">
                         Logout
                     </button>
                 </div>
@@ -39,53 +41,89 @@
         </div>
 
         <!-- Welcome Message -->
-        <div class="bg-blue-50 rounded-2xl shadow-sm p-6 mb-8">
-            <h1 class="text-2xl font-bold text-blue-900" id="welcomeMessage">Welcome</h1>
+        <div class="bg-gradient-to-r from-blue-500 to-blue-700 rounded-2xl shadow-sm p-8 mb-8 text-white">
+            <div class="max-w-3xl">
+                <h1 class="text-3xl font-bold mb-2" id="welcomeMessage">Welcome</h1>
+                <p class="text-lg opacity-90" id="welcomeSubtext">Ready to challenge yourself? Choose a quiz below to get started!</p>
+                <div class="mt-4 flex gap-4 items-center text-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 bg-green-400 rounded-full"></span>
+                        <span>Completed Quizzes: <span id="completedCount" class="font-semibold">0</span></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 bg-yellow-400 rounded-full"></span>
+                        <span>Available Quizzes: <span id="availableCount" class="font-semibold">0</span></span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Content Section -->
-        <div class="bg-white rounded-2xl shadow-sm p-6">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-900">Available Quizzes</h2>
+        <div class="space-y-8">
+            <!-- Unfinished Quizzes Section -->
+            <div class="bg-white rounded-2xl shadow-sm p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">Unfinished Quizzes</h2>
+                        <p class="text-sm text-gray-600 mt-1">Start or continue these quizzes to test your knowledge</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="unfinishedQuizList">
+                    <!-- Unfinished quizzes will be dynamically inserted here -->
+                </div>
             </div>
 
-            <!-- Quiz List -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="quizList">
-                <!-- Quizzes will be dynamically inserted here -->
+            <!-- Finished Quizzes Section -->
+            <div class="bg-white rounded-2xl shadow-sm p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">Completed Quizzes</h2>
+                        <p class="text-sm text-gray-600 mt-1">Review your completed quizzes and scores</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="finishedQuizList">
+                    <!-- Finished quizzes will be dynamically inserted here -->
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Quiz Taking Modal -->
     <div id="quizModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-2xl">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-3xl mx-4">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-gray-900" id="quizTitle"></h3>
-                <div class="text-sm text-gray-600">
-                    Question <span id="currentQuestion">1</span> of <span id="totalQuestions">0</span>
+                <h3 class="text-xl font-bold text-gray-900">Quiz in Progress</h3>
+                <div id="timerDisplay" class="text-lg font-bold text-red-600"></div>
+            </div>
+            
+            <div class="mb-8">
+                <div class="flex justify-between items-center mb-2">
+                    <p class="text-sm text-gray-600">Question <span id="currentQuestion"></span> of <span id="totalQuestions"></span></p>
+                    <p class="text-sm font-medium text-blue-600">Time Remaining</p>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
                 </div>
             </div>
 
-            <div class="space-y-6">
-                <!-- Question -->
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <p class="text-lg font-medium text-gray-900" id="questionText"></p>
-                </div>
+            <div class="mb-8">
+                <h2 id="questionText" class="text-xl font-semibold text-gray-900 mb-4"></h2>
+                <div id="optionsContainer" class="space-y-3"></div>
+            </div>
 
-                <!-- Options -->
-                <div class="space-y-3" id="optionsContainer">
-                    <!-- Options will be dynamically inserted here -->
-                </div>
-
-                <!-- Progress Bar -->
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" id="progressBar" style="width: 0%"></div>
-                </div>
-
-                <!-- Timer -->
-                <div class="text-center text-sm text-gray-600">
-                    Time Remaining: <span id="timer">00:00</span>
-                </div>
+            <div class="flex justify-between items-center">
+                <button id="prevQuestionBtn" 
+                    class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Previous
+                </button>
+                <button id="nextQuestionBtn"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Next
+                </button>
+                <button id="finishQuizBtn"
+                    class="hidden px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                    Finish Quiz
+                </button>
             </div>
         </div>
     </div>
@@ -106,10 +144,8 @@
                             <!-- Previous scores will be shown here -->
                         </div>
                     </div>
-                    <button 
-                        onclick="closeResultsModal()"
-                        class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    >
+                    <button onclick="closeResultsModal()"
+                        class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                         Close
                     </button>
                 </div>
@@ -121,4 +157,5 @@
     <script src="auth.js"></script>
     <script src="student.js"></script>
 </body>
-</html> 
+
+</html>
