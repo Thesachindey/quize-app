@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeMaster Challenge - QuizApp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: #2563eb;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        .logo-text {
+            background: linear-gradient(45deg, #2563eb, #4f46e5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transition: all 0.3s ease;
+        }
+        .logo-text:hover {
+            transform: scale(1.05);
+        }
+        .demo-quiz-btn {
+            background: linear-gradient(45deg, #2563eb, #4f46e5);
+            transition: all 0.3s ease;
+        }
+        .demo-quiz-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+        .question-card {
+            transition: all 0.3s ease;
+        }
+        .question-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn {
+            transition: all 0.2s ease;
+        }
+        .option-btn:hover {
+            transform: translateY(-1px);
+        }
+        .option-btn.selected {
+            background-color: #2563eb;
+            color: white;
+        }
+        .option-btn.correct {
+            background-color: #10b981;
+            color: white;
+        }
+        .option-btn.incorrect {
+            background-color: #ef4444;
+            color: white;
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+        .timer {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+        }
+        .option-label {
+            transition: all 0.2s ease-in-out;
+        }
+        .option-label:hover {
+            background-color: #f3f4f6;
+        }
+        .option-label.selected {
+            background-color: #e0e7ff;
+            border-color: #4f46e5;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center space-x-8">
+                    <a href="index.html" class="logo-text text-2xl font-bold">QuizApp</a>
+                    <div class="hidden md:flex items-center space-x-6">
+                        <a href="index.html" class="nav-link text-gray-600 hover:text-blue-600 font-medium">Home</a>
+                        <a href="login.html" class="nav-link text-gray-600 hover:text-blue-600 font-medium">Login</a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <a href="demo-quiz.html" class="demo-quiz-btn px-4 py-2 text-white rounded-lg font-medium flex items-center space-x-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        <span>Try Demo Quiz</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Quiz Container -->
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white rounded-2xl shadow-sm p-8">
+            <!-- Quiz Header -->
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-900">CodeMaster Challenge</h1>
+                <p class="text-gray-600 mt-2">Test your coding knowledge in 5 minutes!</p>
+                
+                <!-- Progress Bar -->
+                <div class="mt-6">
+                    <div class="flex justify-between text-sm text-gray-600 mb-2">
+                        <span>Progress</span>
+                        <span id="progressText">0/10</span>
+                    </div>
+                    <div class="h-2 bg-gray-200 rounded-full">
+                        <div id="progressBar" class="h-2 bg-blue-600 rounded-full progress-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Timer -->
+                <div class="mt-4">
+                    <div class="inline-flex items-center px-4 py-2 bg-blue-50 rounded-full">
+                        <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="timer text-xl font-bold text-blue-600" id="timer">05:00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Content -->
+            <div id="quizContent" class="space-y-8">
+                <!-- Questions will be dynamically inserted here -->
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="mt-8 flex justify-between">
+                <button 
+                    id="prevButton"
+                    class="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                    disabled
+                >
+                    Previous
+                </button>
+                <button 
+                    id="nextButton"
+                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                >
+                    Next
+                </button>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="mt-8 text-center">
+                <button 
+                    id="submitQuiz"
+                    class="hidden px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+                >
+                    Submit Quiz
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Modal -->
+    <div id="resultsModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-2xl font-bold text-center text-gray-900 mb-4">Quiz Results</h3>
+                
+                <!-- Score Summary -->
+                <div class="text-center mb-6">
+                    <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-blue-50 mb-4">
+                        <span id="scorePercentage" class="text-3xl font-bold text-blue-600">0%</span>
+                    </div>
+                    <p class="text-xl text-gray-700" id="scoreText">0/10</p>
+                </div>
+
+                <!-- Answers Review -->
+                <div class="space-y-4 max-h-96 overflow-y-auto px-4">
+                    <div id="answersReview" class="space-y-6">
+                        <!-- Answers will be inserted here -->
+                    </div>
+                </div>
+
+                <div class="mt-6 text-center">
+                    <button id="closeModal" class="px-6 py-3 bg-blue-600 text-white text-base font-medium rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        Return to Home
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Demo Quiz Questions
+        const demoQuiz = {
+            title: "CodeMaster Challenge",
+            timeLimit: 5, // minutes
+            questions: [
+                {
+                    id: 1,
+                    question: "What is the correct way to declare a variable in JavaScript?",
+                    options: [
+                        "var x = 5;",
+                        "variable x = 5;",
+                        "x = 5;",
+                        "let x = 5;"
+                    ],
+                    correctAnswer: 3
+                },
+                {
+                    id: 2,
+                    question: "Which of the following is NOT a JavaScript data type?",
+                    options: [
+                        "String",
+                        "Boolean",
+                        "Integer",
+                        "Object"
+                    ],
+                    correctAnswer: 2
+                },
+                {
+                    id: 3,
+                    question: "What does HTML stand for?",
+                    options: [
+                        "Hyper Text Markup Language",
+                        "High Tech Modern Language",
+                        "Hyper Transfer Markup Language",
+                        "Hyper Text Modern Language"
+                    ],
+                    correctAnswer: 0
+                },
+                {
+                    id: 4,
+                    question: "Which CSS property is used to change the text color?",
+                    options: [
+                        "text-color",
+                        "font-color",
+                        "color",
+                        "text-style"
+                    ],
+                    correctAnswer: 2
+                },
+                {
+                    id: 5,
+                    question: "What is the correct way to write a comment in Python?",
+                    options: [
+                        "// This is a comment",
+                        "/* This is a comment */",
+                        "# This is a comment",
+                        "-- This is a comment"
+                    ],
+                    correctAnswer: 2
+                },
+                {
+                    id: 6,
+                    question: "Which of the following is a valid way to create a function in JavaScript?",
+                    options: [
+                        "function myFunction() {}",
+                        "create myFunction() {}",
+                        "new function myFunction() {}",
+                        "function: myFunction() {}"
+                    ],
+                    correctAnswer: 0
+                },
+                {
+                    id: 7,
+                    question: "What is the output of console.log(typeof [])?",
+                    options: [
+                        "array",
+                        "object",
+                        "list",
+                        "undefined"
+                    ],
+                    correctAnswer: 1
+                },
+                {
+                    id: 8,
+                    question: "Which of the following is NOT a valid CSS selector?",
+                    options: [
+                        ".class",
+                        "#id",
+                        "@media",
+                        "$variable"
+                    ],
+                    correctAnswer: 3
+                },
+                {
+                    id: 9,
+                    question: "What is the correct way to create a new array in JavaScript?",
+                    options: [
+                        "array[]",
+                        "new Array()",
+                        "[]",
+                        "Both B and C"
+                    ],
+                    correctAnswer: 3
+                },
+                {
+                    id: 10,
+                    question: "Which of the following is NOT a valid way to declare a constant in JavaScript?",
+                    options: [
+                        "const x = 5;",
+                        "let x = 5;",
+                        "var x = 5;",
+                        "constant x = 5;"
+                    ],
+                    correctAnswer: 3
+                }
+            ]
+        };
+
+        let currentQuestion = 0;
+        let userAnswers = new Array(demoQuiz.questions.length).fill(null);
+        let timer;
+
+        // Initialize Quiz
+        function initializeQuiz() {
+            const quizContent = document.getElementById('quizContent');
+            demoQuiz.questions.forEach((q, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = `question-card bg-gray-50 p-6 rounded-lg ${index === 0 ? '' : 'hidden'}`;
+                questionDiv.id = `question-${index}`;
+                questionDiv.innerHTML = `
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">${index + 1}. ${q.question}</h3>
+                    <div class="space-y-3">
+                        ${q.options.map((option, i) => `
+                            <label class="option-label flex items-center space-x-3 p-3 rounded-lg border border-gray-200 cursor-pointer">
+                                <input type="radio" name="q${q.id}" value="${i}" class="h-4 w-4 text-blue-600">
+                                <span class="text-gray-700">${option}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                `;
+                quizContent.appendChild(questionDiv);
+            });
+
+            // Add event listeners to radio buttons
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const questionId = parseInt(this.name.substring(1)) - 1;
+                    userAnswers[questionId] = parseInt(this.value);
+                    updateProgress();
+                });
+            });
+        }
+
+        // Update Progress
+        function updateProgress() {
+            const answered = userAnswers.filter(answer => answer !== null).length;
+            const progress = (answered / demoQuiz.questions.length) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            document.getElementById('progressText').textContent = `${answered}/${demoQuiz.questions.length}`;
+        }
+
+        // Timer Function
+        function startTimer() {
+            let timeLeft = demoQuiz.timeLimit * 60;
+            const timerDisplay = document.getElementById('timer');
+            
+            timer = setInterval(() => {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    submitQuiz();
+                }
+                timeLeft--;
+            }, 1000);
+        }
+
+        // Navigation Functions
+        function showQuestion(index) {
+            document.querySelectorAll('.question-card').forEach(card => card.classList.add('hidden'));
+            document.getElementById(`question-${index}`).classList.remove('hidden');
+            
+            // Update navigation buttons
+            document.getElementById('prevButton').disabled = index === 0;
+            document.getElementById('nextButton').textContent = index === demoQuiz.questions.length - 1 ? 'Finish' : 'Next';
+            
+            // Show submit button on last question
+            document.getElementById('submitQuiz').classList.toggle('hidden', index !== demoQuiz.questions.length - 1);
+        }
+
+        // Submit Quiz Function
+        function submitQuiz() {
+            clearInterval(timer);
+            const score = userAnswers.filter((answer, index) => answer === demoQuiz.questions[index].correctAnswer).length;
+            const percentage = (score / demoQuiz.questions.length) * 100;
+            
+            // Update score display
+            document.getElementById('scorePercentage').textContent = `${Math.round(percentage)}%`;
+            document.getElementById('scoreText').textContent = `${score}/${demoQuiz.questions.length}`;
+
+            // Generate answers review
+            const answersReview = document.getElementById('answersReview');
+            answersReview.innerHTML = demoQuiz.questions.map((q, index) => {
+                const userAnswer = userAnswers[index];
+                const isCorrect = userAnswer === q.correctAnswer;
+                const userAnswerText = userAnswer !== null ? q.options[userAnswer] : 'Not answered';
+                const correctAnswerText = q.options[q.correctAnswer];
+
+                return `
+                    <div class="p-4 rounded-lg ${isCorrect ? 'bg-green-50' : 'bg-red-50'}">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                ${isCorrect ? 
+                                    '<svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' :
+                                    '<svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>'
+                                }
+                            </div>
+                            <div class="ml-3">
+                                <h4 class="text-lg font-medium text-gray-900">Question ${index + 1}</h4>
+                                <p class="mt-1 text-gray-700">${q.question}</p>
+                                <div class="mt-2 space-y-2">
+                                    <p class="text-sm">
+                                        <span class="font-medium">Your answer:</span>
+                                        <span class="${isCorrect ? 'text-green-600' : 'text-red-600'}">${userAnswerText}</span>
+                                    </p>
+                                    ${!isCorrect ? `
+                                        <p class="text-sm">
+                                            <span class="font-medium">Correct answer:</span>
+                                            <span class="text-green-600">${correctAnswerText}</span>
+                                        </p>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('resultsModal').classList.remove('hidden');
+        }
+
+        // Event Listeners
+        document.getElementById('prevButton').addEventListener('click', () => {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                showQuestion(currentQuestion);
+            }
+        });
+
+        document.getElementById('nextButton').addEventListener('click', () => {
+            if (currentQuestion < demoQuiz.questions.length - 1) {
+                currentQuestion++;
+                showQuestion(currentQuestion);
+            } else {
+                submitQuiz();
+            }
+        });
+
+        document.getElementById('submitQuiz').addEventListener('click', submitQuiz);
+
+        document.getElementById('closeModal').addEventListener('click', () => {
+            document.getElementById('resultsModal').classList.add('hidden');
+            window.location.href = 'index.html';
+        });
+
+        // Initialize
+        initializeQuiz();
+        startTimer();
+        showQuestion(0);
+    </script>
+</body>
+</html> 

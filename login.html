@@ -10,15 +10,61 @@
         body {
             font-family: 'Inter', sans-serif;
         }
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: #2563eb;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        .logo-text {
+            background: linear-gradient(45deg, #2563eb, #4f46e5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transition: all 0.3s ease;
+        }
+        .logo-text:hover {
+            transform: scale(1.05);
+        }
+        .demo-quiz-btn {
+            background: linear-gradient(45deg, #2563eb, #4f46e5);
+            transition: all 0.3s ease;
+        }
+        .demo-quiz-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
     </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
     <!-- Navigation -->
-    <nav class="bg-white shadow-sm">
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
+                <div class="flex items-center space-x-8">
+                    <a href="index.html" class="logo-text text-2xl font-bold">QuizApp</a>
+                    <div class="hidden md:flex items-center space-x-6">
+                        <a href="index.html" class="nav-link text-gray-600 hover:text-blue-600 font-medium">Home</a>
+                        <a href="login.html" class="nav-link text-gray-600 hover:text-blue-600 font-medium">Login</a>
+                    </div>
+                </div>
                 <div class="flex items-center">
-                    <a href="index.html" class="text-2xl font-bold text-blue-600">QuizApp</a>
+                    <a href="demo-quiz.html" class="demo-quiz-btn px-4 py-2 text-white rounded-lg font-medium flex items-center space-x-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        <span>Try Demo Quiz</span>
+                    </a>
                 </div>
             </div>
         </div>
