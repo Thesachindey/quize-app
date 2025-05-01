@@ -335,11 +335,24 @@
         let currentQuestion = 0;
         let userAnswers = new Array(demoQuiz.questions.length).fill(null);
         let timer;
+        let shuffledQuestions = [];
+
+        // Shuffle array using Fisher-Yates algorithm
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
 
         // Initialize Quiz
         function initializeQuiz() {
+            // Shuffle questions
+            shuffledQuestions = shuffleArray([...demoQuiz.questions]);
+            
             const quizContent = document.getElementById('quizContent');
-            demoQuiz.questions.forEach((q, index) => {
+            shuffledQuestions.forEach((q, index) => {
                 const questionDiv = document.createElement('div');
                 questionDiv.className = `question-card bg-gray-50 p-6 rounded-lg ${index === 0 ? '' : 'hidden'}`;
                 questionDiv.id = `question-${index}`;
@@ -361,7 +374,8 @@
             document.querySelectorAll('input[type="radio"]').forEach(radio => {
                 radio.addEventListener('change', function() {
                     const questionId = parseInt(this.name.substring(1)) - 1;
-                    userAnswers[questionId] = parseInt(this.value);
+                    const originalIndex = shuffledQuestions.findIndex(q => q.id === questionId + 1);
+                    userAnswers[originalIndex] = parseInt(this.value);
                     updateProgress();
                 });
             });
@@ -409,16 +423,16 @@
         // Submit Quiz Function
         function submitQuiz() {
             clearInterval(timer);
-            const score = userAnswers.filter((answer, index) => answer === demoQuiz.questions[index].correctAnswer).length;
-            const percentage = (score / demoQuiz.questions.length) * 100;
+            const score = userAnswers.filter((answer, index) => answer === shuffledQuestions[index].correctAnswer).length;
+            const percentage = (score / shuffledQuestions.length) * 100;
             
             // Update score display
             document.getElementById('scorePercentage').textContent = `${Math.round(percentage)}%`;
-            document.getElementById('scoreText').textContent = `${score}/${demoQuiz.questions.length}`;
+            document.getElementById('scoreText').textContent = `${score}/${shuffledQuestions.length}`;
 
             // Generate answers review
             const answersReview = document.getElementById('answersReview');
-            answersReview.innerHTML = demoQuiz.questions.map((q, index) => {
+            answersReview.innerHTML = shuffledQuestions.map((q, index) => {
                 const userAnswer = userAnswers[index];
                 const isCorrect = userAnswer === q.correctAnswer;
                 const userAnswerText = userAnswer !== null ? q.options[userAnswer] : 'Not answered';
