@@ -345,9 +345,44 @@ document.addEventListener('DOMContentLoaded', function () {
     } else {
         greeting = 'Good evening';
     }
+
+    // Get user's first name from email
+    const firstName = user.email.split('@')[0].split('.')[0];
+    const capitalizedName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
     
-    document.getElementById('welcomeMessage').textContent = `${greeting}, ${user.name}!`;
-    document.getElementById('welcomeSubtext').textContent = `Ready to challenge yourself? Choose a quiz below to get started!`;
+    // Get user's quiz statistics
+    const quizzes = JSON.parse(localStorage.getItem('quizzes')) || [];
+    const userEmail = user.email;
+    const completedQuizzes = quizzes.filter(quiz => {
+        const progress = getProgress(userEmail, quiz.id);
+        return progress.length > 0;
+    });
+    
+    const totalScore = completedQuizzes.reduce((sum, quiz) => {
+        const progress = getProgress(userEmail, quiz.id);
+        const bestScore = progress.length > 0 ? Math.max(...progress.map(attempt => attempt.score)) : 0;
+        return sum + bestScore;
+    }, 0);
+    
+    const totalQuestions = completedQuizzes.reduce((sum, quiz) => sum + quiz.questions.length, 0);
+    const averageScore = totalQuestions > 0 ? Math.round((totalScore / totalQuestions) * 100) : 0;
+    
+    // Create personalized welcome message
+    let welcomeMessage = `${greeting}, ${capitalizedName}!`;
+    let welcomeSubtext = '';
+    
+    if (completedQuizzes.length === 0) {
+        welcomeSubtext = "Welcome to your learning journey! Ready to test your knowledge? Choose a quiz below to get started!";
+    } else {
+        const performanceMessage = averageScore >= 80 ? "Excellent work!" : 
+                                 averageScore >= 60 ? "Great progress!" : 
+                                 "Keep practicing!";
+        
+        welcomeSubtext = `${performanceMessage} You've completed ${completedQuizzes.length} quizzes with an average score of ${averageScore}%. Ready for your next challenge?`;
+    }
+    
+    document.getElementById('welcomeMessage').textContent = welcomeMessage;
+    document.getElementById('welcomeSubtext').textContent = welcomeSubtext;
 
     displayQuizzes();
 
