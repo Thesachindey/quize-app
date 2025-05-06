@@ -77,7 +77,9 @@ function displayQuizzes() {
             </div>
         `;
     } else {
-        finishedList.innerHTML = finishedQuizzes.map(quiz => `
+        finishedList.innerHTML = finishedQuizzes.map(quiz => {
+            const comments = JSON.parse(localStorage.getItem(`quiz_comments_${quiz.id}`)) || [];
+            return `
             <div class="bg-gray-50 rounded-lg p-6 border-2 border-green-400">
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">${quiz.title}</h3>
                 <div class="space-y-2 text-sm text-gray-600 mb-4">
@@ -86,14 +88,37 @@ function displayQuizzes() {
                     <p class="text-green-600">Best Score: ${quiz.bestScore}/${quiz.questions.length}</p>
                     <p class="text-blue-600">Last Attempt: ${new Date(quiz.lastAttempt.date).toLocaleDateString()}</p>
                 </div>
-                <button 
-                    onclick="startQuiz(${quiz.id})"
-                    class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                >
-                    Retake Quiz
-                </button>
+
+                <!-- Comments Section -->
+                <div class="mt-4 border-t pt-4">
+                    <h4 class="font-medium text-gray-900 mb-2">Comments</h4>
+                    <div class="space-y-2 max-h-40 overflow-y-auto mb-3">
+                        ${comments.length > 0 ? comments.map(comment => `
+                            <div class="bg-white p-2 rounded">
+                                <p class="text-sm text-gray-600">${comment.text}</p>
+                                <p class="text-xs text-gray-500">By ${comment.author} on ${new Date(comment.timestamp).toLocaleDateString()}</p>
+                            </div>
+                        `).join('') : '<p class="text-sm text-gray-500">No comments yet</p>'}
+                    </div>
+                    
+                    <!-- Add Comment Form -->
+                    <div class="mt-2">
+                        <textarea 
+                            id="comment_${quiz.id}"
+                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Add a comment..."
+                            rows="2"
+                        ></textarea>
+                        <button 
+                            onclick="addComment(${quiz.id})"
+                            class="mt-2 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                        >
+                            Add Comment
+                        </button>
+                    </div>
+                </div>
             </div>
-        `).join('');
+        `}).join('');
     }
 }
 
@@ -221,24 +246,48 @@ function calculateScore() {
     return score;
 }
 
-// Save progress
-function saveProgress(userEmail, quizId, score, totalQuestions) {
-    const progress = JSON.parse(localStorage.getItem('progress')) || [];
-    progress.push({
-        userEmail,
-        quizId,
-        score,
-        totalQuestions,
-        date: new Date().toISOString()
+// Add comment to a quiz
+function addComment(quizId) {
+    const commentText = document.getElementById(`comment_${quizId}`).value.trim();
+    if (!commentText) return;
+
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    const comments = JSON.parse(localStorage.getItem(`quiz_comments_${quizId}`)) || [];
+    
+    comments.push({
+        text: commentText,
+        author: currentUser.email,
+        timestamp: new Date().toISOString()
     });
-    localStorage.setItem('progress', JSON.stringify(progress));
-    return true;
+
+    localStorage.setItem(`quiz_comments_${quizId}`, JSON.stringify(comments));
+    document.getElementById(`comment_${quizId}`).value = '';
+    displayQuizzes(); // Refresh the display
+}
+
+// Save progress and update participation
+function saveProgress(userEmail, quizId, score, totalQuestions) {
+    const progress = getProgress(userEmail, quizId);
+    const attempt = {
+        date: new Date().toISOString(),
+        score: score,
+        totalQuestions: totalQuestions
+    };
+    progress.push(attempt);
+    localStorage.setItem(`quiz_progress_${userEmail}_${quizId}`, JSON.stringify(progress));
+
+    // Update participation count
+    const participations = JSON.parse(localStorage.getItem(`quiz_participations_${quizId}`)) || [];
+    if (!participations.includes(userEmail)) {
+        participations.push(userEmail);
+        localStorage.setItem(`quiz_participations_${quizId}`, JSON.stringify(participations));
+    }
 }
 
 // Get progress for a specific user and quiz
 function getProgress(userEmail, quizId) {
-    const progress = JSON.parse(localStorage.getItem('progress')) || [];
-    return progress.filter(p => p.userEmail === userEmail && p.quizId === quizId);
+    const progress = JSON.parse(localStorage.getItem(`quiz_progress_${userEmail}_${quizId}`)) || [];
+    return progress;
 }
 
 // End the quiz
